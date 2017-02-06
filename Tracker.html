@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>this is locations test page</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    $(document).ready(function(){
+      $('a').click(()=>{
+        const socket = io.connect();
+        let name = $('#textinput').val();
+        socket.emit('join',$("#textinput").val);
+
+        socket.on('receive',(data)=>{
+          let latitude = data.latitude;
+          let longitude=data.longitude;
+          let output = '';
+          output += '<h3>latitude: '+latitude+'</h3>';
+          output += '<h3>longitude: '+longitude+'</h3>';
+          ouput +='<p>'+data.date+'</p>';
+          $('<li></li>').append(output).prependTo('#listview');
+
+          var content = $('#content');
+          if(content.children().length>7){
+            content.children().last().remove();
+          }
+          $('#listview').listview('refresh');
+        });
+        navigator.geolocation.watchPosition((position)=>{
+          socket.emit('location',{
+            name:name,
+            latitude:position.coords.latitude,
+            longitude:position.coords.longitude
+          });
+        },(error)=>{
+          alert(error.message);
+        });
+      });
+    });
+    </script>
+  </head>
+  <body>
+    <div data-role="page">
+      <div data-role='header' data-theme="b">
+        <h1>location Tracker</h1>
+      </div>
+      <div data-role="content">
+        <div data-role="fieldcontain">
+          <label for="textinput">Name</label>
+          <input type="text" id="textinput" />
+        </div>
+        <a href="#tracker" class="ui-btn ui-btn-b">Start Track</a>
+      </div>
+    </div>
+    <div data-role="page" id="tracker">
+      <div data-role="header" data-theme="b">
+        <h1>Location Tracker</h1>
+      </div>
+      <div data-role="content">
+        <ul id="listview" data-role="listview" data-inset="true">
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
